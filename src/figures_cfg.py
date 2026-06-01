@@ -114,7 +114,8 @@ def plot_feature_ts(df, feature, title=None, subtitle=None):
 
     fig.autofmt_xdate(rotation=30, ha="right")
     fig.tight_layout()
-
+    plt.close(fig)
+    
     return fig
 
 def plot_features_ts(df, features, rows, cols, suptitle=None, subtitle=None):
