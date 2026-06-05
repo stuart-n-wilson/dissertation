@@ -118,7 +118,7 @@ def plot_feature_ts(df, feature, title=None, subtitle=None):
 
     fig, ax = plt.subplots(figsize=(10, 3.5))
 
-    ax.plot(df.index, df[feature], color=PRIMARY, linewidth=0.9, alpha=0.9)
+    ax.plot(df.index, df[feature], color=PRIMARY, linewidth=0.5, alpha=0.9)
 
     # Spines
     ax.spines["top"].set_visible(False)
@@ -159,7 +159,7 @@ def plot_features_ts(df, features, rows, cols, suptitle=None, subtitle=None):
     axes = axes.flatten()
 
     for ax, feature in zip(axes, features):
-        ax.plot(df.index, df[feature], color=PRIMARY, linewidth=0.9, alpha=0.9)
+        ax.plot(df.index, df[feature], color=PRIMARY, linewidth=0.5, alpha=0.9)
 
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)

@@ -1,6 +1,7 @@
 # Libaries
 import numpy as np
 import pandas as pd
+import random
 
 # Internal functions ---
 def _simulate_mar(df, n):
@@ -9,20 +10,24 @@ def _simulate_mar(df, n):
 def _simulate_mnar(df, n):
     pass
 
-def simulate_mcar(df:pd.DataFrame, n:float) -> pd.DataFrame:
+def simulate_mcar(df:pd.DataFrame, n:float, random_seed:int=42) -> pd.DataFrame:
     """Simulates Missing Completely At Random (MCAR) data in a DataFrame.
 
-    Completely andomly replaces a given proportion of values across the 
+    Completely randomly replaces a given proportion of values across the 
     entire DataFrame with NaN.
 
     Args:
         df: The input DataFrame to introduce missing values into.
         n: The proportion of values to set as missing, between 0 and 1.
+        random_seed: Random seed, default is 42.
 
     Returns:
         A new DataFrame of the same shape, index, and columns as df,
         with approximately n * df.size values replaced by NaN.
     """
+    
+    random.seed(random_seed)
+
     if not 0 <= n <= 1:
         raise ValueError("n must be between 0 and 1.")
     
