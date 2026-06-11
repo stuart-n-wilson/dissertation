@@ -35,9 +35,7 @@ def _simulate_mcar(df:pd.DataFrame, n:float) -> pd.DataFrame:
 
     return pd.DataFrame(reshaped, columns=df.columns, index=df.index)
 
-def _create_mcar_mask(df:pd.DataFrame, n:float, random_seed:int=42) -> pd.DataFrame:
-
-    np.random.seed(random_seed)
+def _create_mcar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
 
     no_missing = int((n / 100) * df.size)
 
@@ -69,11 +67,10 @@ def simulate_missingness(df:pd.DataFrame, mechanism:str, n:float, random_seed:in
         df: A new DataFrame of the same shape, index, and columns as df,
         with approximately n * df.size values replaced by NaN.
     """
+    np.random.seed(random_seed)
 
     if not 0 <= n <= 100:
         raise ValueError("n must be between 0 and 100.")
-
-    np.random.seed(random_seed)
 
     if mechanism not in ['mar', 'mnar', 'mcar']:
         raise ValueError('Mechanisms must be mar, mnar or mcar.')
@@ -87,15 +84,15 @@ def simulate_missingness(df:pd.DataFrame, mechanism:str, n:float, random_seed:in
     elif mechanism == 'mcar':
         return _simulate_mcar(df, n)
 
-def create_mask(df, mechanism :str, n:float, random_seed:int=42):
+def create_mask(df, mechanism:str, n:float, random_seed:int=42):
+
+    np.random.seed(random_seed)
 
     if not 0 <= n <= 100:
         raise ValueError("n must be between 0 and 100.")
     
     if mechanism  not in ["mar", "mcar", "mnar"]:
         raise ValueError("Mechanism must be mar, mcar or mnar.")
-
-    np.random.seed(random_seed)
 
     if mechanism  == "mar":
         return _create_mar_mask(df, n)
