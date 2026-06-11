@@ -4,23 +4,23 @@ import pandas as pd
 
 # --- Internal functions ---
 def _simulate_mar(df, n):
-    pass
+    return df
 
-def _create_mar_mask():
-    pass
+def _create_mar_mask(df, n):
+    return df
 
 def _simulate_mnar(df, n):
-    pass
+    return df
 
-def _create_mnar_mask():
-    pass
+def _create_mnar_mask(df, n):
+    return df
 
 def _simulate_mcar(df:pd.DataFrame, n:float) -> pd.DataFrame:
     """
     Simulates Missing Completely At Random (MCAR) data in a DataFrame.
     """
     
-    no_missing = int(n * df.size)
+    no_missing = int((n / 100) * df.size)
     
     # Flatten df into list.
     flat = df.to_numpy().flatten().astype(float)
@@ -39,7 +39,7 @@ def _create_mcar_mask(df:pd.DataFrame, n:float, random_seed:int=42) -> pd.DataFr
 
     np.random.seed(random_seed)
 
-    no_missing = int(n * df.size)
+    no_missing = int((n / 100) * df.size)
 
     mask = np.zeros(len(df.to_numpy().flatten()), dtype=bool)
 
@@ -61,7 +61,7 @@ def simulate_missingness(df:pd.DataFrame, mechanism:str, n:float, random_seed:in
     Args:
         df: The input DataFrame to introduce missing values into.
         mechanism: Missingness mechanisms - mar, mcar or mnar.
-        n: The proportion of values to set as missing, between 0 and 1.
+        n: The percentage of values to set as missing, between 0 and 100.
         random_seed: Random seed, default is 42.
 
     Returns:
@@ -70,8 +70,8 @@ def simulate_missingness(df:pd.DataFrame, mechanism:str, n:float, random_seed:in
         with approximately n * df.size values replaced by NaN.
     """
 
-    if not 0 <= n <= 1:
-        raise ValueError("n must be between 0 and 1.")
+    if not 0 <= n <= 100:
+        raise ValueError("n must be between 0 and 100.")
 
     np.random.seed(random_seed)
 
@@ -87,21 +87,21 @@ def simulate_missingness(df:pd.DataFrame, mechanism:str, n:float, random_seed:in
     elif mechanism == 'mcar':
         return _simulate_mcar(df, n)
 
-def create_mask(mech:str, n:float, random_seed:int=42):
+def create_mask(df, mechanism :str, n:float, random_seed:int=42):
 
-    if not 0 <= n <= 1:
-        raise ValueError("n must be between 0 and 1.")
+    if not 0 <= n <= 100:
+        raise ValueError("n must be between 0 and 100.")
     
-    if mech not in ["mar", "mcar", "mnar"]:
-        raise ValueError("mech must be mar, mcar or mnar.")
+    if mechanism  not in ["mar", "mcar", "mnar"]:
+        raise ValueError("Mechanism must be mar, mcar or mnar.")
 
     np.random.seed(random_seed)
 
-    if mech == "mar":
-        return _create_mar_mask()
+    if mechanism  == "mar":
+        return _create_mar_mask(df, n)
 
-    elif mech == "mcar":
-        return _create_mcar_mask()
+    elif mechanism  == "mcar":
+        return _create_mcar_mask(df, n)
     
-    elif mech == "mnar":
-        return _create_mnar_mask()
+    elif mechanism  == "mnar":
+        return _create_mnar_mask(df, n)
