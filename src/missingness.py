@@ -5,10 +5,10 @@ import pandas as pd
 # --- Internal functions ---
 
 def _create_mar_mask(df, n):
-    return df
+    return pd.DataFrame(False, index=df.index, columns=df.columns)
 
 def _create_mnar_mask(df, n):
-    return df
+    return pd.DataFrame(False, index=df.index, columns=df.columns)
 
 def _create_mcar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
     """
