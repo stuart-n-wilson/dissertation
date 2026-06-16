@@ -4,9 +4,13 @@ import pandas as pd
 
 # --- Internal functions ---
 
+# logistic steepness -> controls how strongly the mechanism concentrates missingness
+K = 4
+
 def _create_mar_mask(df, n):
     """
-    Creates a missingness mask using synthetic MAR.
+    Creates a missingness mask using synthetic MAR. Probability of missingness uses most
+    correlated features.
     """
     N = int((n / 100) * df.size)
     arr = df.to_numpy(dtype=float)
@@ -22,9 +26,6 @@ def _create_mar_mask(df, n):
 
     # Create the weights matrix - w[i, j] is how much df[i,j] wants to be missing.
     W = np.empty_like(arr)
-
-    # K determines how strongly the MAR mechanism depends on the driver variable.
-    K = 4
     
     for col, driver in enumerate(drivers):
 
@@ -47,26 +48,41 @@ def _create_mar_mask(df, n):
 
     return pd.DataFrame(mask, columns=df.columns, index=df.index)
 
-def _create_mnar_mask(df, n):
-    return pd.DataFrame(False, index=df.index, columns=df.columns)
-
 def _create_mcar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
     """
     Creates a missingness mask using synthetic MCAR.
     """
-    no_missing = int((n / 100) * df.size)
+    N = int((n / 100) * df.size)
+    arr = df.to_numpy(dtype=float)
 
-    mask = np.zeros(len(df.to_numpy().flatten()), dtype=bool)
+    mask = np.zeros(len(arr.flatten()), dtype=bool)
 
     # Randomly select indices (without repeats) from flat.
-    idx = np.random.choice(len(df.to_numpy().flatten()), no_missing, replace=False)
+    idx = np.random.choice(len(df.to_numpy().flatten()), N, replace=False)
 
     mask[idx] = True
     mask = mask.reshape(df.shape)
 
     return pd.DataFrame(mask, columns=df.columns, index=df.index)
 
+def _create_mnar_mask(df, n):
+    """
+    Synthetic MNAR: missingness in each cell is driven by its own value,
+    through a per-column-standardised logistic.
+    """
+    N = int((n / 100) * df.size)
+    arr = df.to_numpy(dtype=float)
+    Z = (arr - arr.mean(axis=0)) / arr.std(axis=0)   # per-column z-score
+    W = 1 / (1 + np.exp(-K * Z))
 
+    w = W.flatten(); w = w / w.sum()
+    idx = np.random.choice(w.size, N, replace=False, p=w)
+    mask = np.zeros(w.size, dtype=bool)
+    mask[idx] = True
+    mask = mask.reshape(df.shape)
+
+    return pd.DataFrame(mask, columns=df.columns, index=df.index)
+                        
 # --- External functions ---
 
 def create_mask(
