@@ -5,7 +5,47 @@ import pandas as pd
 # --- Internal functions ---
 
 def _create_mar_mask(df, n):
-    return pd.DataFrame(False, index=df.index, columns=df.columns)
+    """
+    Creates a missingness mask using synthetic MAR.
+    """
+    N = int((n / 100) * df.size)
+    arr = df.to_numpy(dtype=float)
+
+    # Calculate feature Pearson correlations.
+    corr = np.abs(np.corrcoef(arr, rowvar=False))
+
+    # Fill diagonal with -inf to prevent self corr.
+    np.fill_diagonal(corr, -np.inf)
+
+    # List of indices for most correlation feature for feature.
+    drivers = corr.argmax(axis=1)
+
+    # Create the weights matrix - w[i, j] is how much df[i,j] wants to be missing.
+    W = np.empty_like(arr)
+
+    # K determines how strongly the MAR mechanism depends on the driver variable.
+    K = 4
+    
+    for col, driver in enumerate(drivers):
+
+        # Calculate z scores by driver col.
+        zd = (arr[:, driver] - arr[:, driver].mean()) / arr[:, driver].std()
+
+        # Create weights matrix using sigmoid function.
+        W[:, col] = 1.0 / (1.0 + np.exp(-K * zd))
+
+    w = W.flatten()
+
+    # Convert weights into probabilities.
+    w = w / w.sum()
+
+    idx = np.random.choice(w.size, N, replace=False, p=w)
+
+    mask = np.zeros(w.size, dtype=bool)
+    mask[idx] = True
+    mask = mask.reshape(df.shape)
+
+    return pd.DataFrame(mask, columns=df.columns, index=df.index)
 
 def _create_mnar_mask(df, n):
     return pd.DataFrame(False, index=df.index, columns=df.columns)
