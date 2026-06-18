@@ -7,7 +7,7 @@ import pandas as pd
 # logistic steepness -> controls how strongly the mechanism concentrates missingness
 K = 4
 
-def _create_mar_mask(df, n):
+def _create_mar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
     """
     Creates a missingness mask using synthetic MAR. Probability of missingness uses most
     correlated features.
@@ -21,25 +21,27 @@ def _create_mar_mask(df, n):
     # Fill diagonal with -inf to prevent self corr.
     np.fill_diagonal(corr, -np.inf)
 
-    # List of indices for most correlation feature for feature.
+    # List of indices for most correlated feature for each feature.
     drivers = corr.argmax(axis=1)
 
     # Create the weights matrix - w[i, j] is how much df[i,j] wants to be missing.
     W = np.empty_like(arr)
     
-    for col, driver in enumerate(drivers):
+    # Column j, driver d.
+    for j, d in enumerate(drivers):
 
-        # Calculate z scores by driver col.
-        zd = (arr[:, driver] - arr[:, driver].mean()) / arr[:, driver].std()
+        # Calculate z scores by driver column.
+        zd = (arr[:, d] - arr[:, d].mean()) / arr[:, d].std()
 
         # Create weights matrix using sigmoid function.
-        W[:, col] = 1.0 / (1.0 + np.exp(-K * zd))
+        W[:, j] = 1.0 / (1.0 + np.exp(-K * zd))
 
     w = W.flatten()
 
     # Convert weights into probabilities.
     w = w / w.sum()
 
+    # Randomly select without repeats using probability weights.
     idx = np.random.choice(w.size, N, replace=False, p=w)
 
     mask = np.zeros(w.size, dtype=bool)
@@ -57,7 +59,7 @@ def _create_mcar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
 
     mask = np.zeros(len(arr.flatten()), dtype=bool)
 
-    # Randomly select indices (without repeats) from flat.
+    # Randomly select without repeats.
     idx = np.random.choice(len(df.to_numpy().flatten()), N, replace=False)
 
     mask[idx] = True
@@ -65,18 +67,26 @@ def _create_mcar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
 
     return pd.DataFrame(mask, columns=df.columns, index=df.index)
 
-def _create_mnar_mask(df, n):
+def _create_mnar_mask(df:pd.DataFrame, n:float) -> pd.DataFrame:
     """
     Synthetic MNAR: missingness in each cell is driven by its own value,
     through a per-column-standardised logistic.
     """
     N = int((n / 100) * df.size)
     arr = df.to_numpy(dtype=float)
-    Z = (arr - arr.mean(axis=0)) / arr.std(axis=0)   # per-column z-score
+
+    # Calculate z-score per column.
+    Z = (arr - arr.mean(axis=0)) / arr.std(axis=0)
     W = 1 / (1 + np.exp(-K * Z))
 
-    w = W.flatten(); w = w / w.sum()
+    w = W.flatten()
+
+    # Convert weights into probabilities.
+    w = w / w.sum()
+
+    # Randomly select without repeats using probability weights.
     idx = np.random.choice(w.size, N, replace=False, p=w)
+
     mask = np.zeros(w.size, dtype=bool)
     mask[idx] = True
     mask = mask.reshape(df.shape)
