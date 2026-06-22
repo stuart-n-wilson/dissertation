@@ -42,4 +42,5 @@ class BaseImputer:
             DataFrame of the same shape, index, and columns with NaNs filled.
         """
         self.fit(incomplete)
+        
         return self.transform(incomplete)
