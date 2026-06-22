@@ -1,8 +1,11 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_ETT_PATH = PROJECT_ROOT / "data" / "raw" / "ETTm1.csv"
 
-def load_ett(path: str = "data/raw/ETTm1.csv") -> pd.DataFrame:
+def load_ett(path: str | Path = DEFAULT_ETT_PATH) -> pd.DataFrame:
     """Load the ETTm1 dataset from CSV with a DatetimeIndex.
 
     Args:
@@ -11,6 +14,14 @@ def load_ett(path: str = "data/raw/ETTm1.csv") -> pd.DataFrame:
     Returns:
         DataFrame of the 7 feature columns indexed by datetime.
     """
+    path = Path(path)
+
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Dataset not found at:\n{path}\n\n"
+            f"PROJECT_ROOT = {PROJECT_ROOT}"
+        )
+    
     return pd.read_csv(path, parse_dates=["date"], index_col="date")
 
 
