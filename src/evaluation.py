@@ -35,3 +35,37 @@ def reconstruction_errors(
     """
     errors = (imputed - true).to_numpy()[mask.to_numpy()]
     return _rmse(errors), _mae(errors)
+
+def pointwise_bias_variance(
+        forecasts: np.ndarray,
+        reference: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+     """
+     Per-horizon-step bias² and variance across the seed forecasts.
+
+    Args:
+        forecasts: shape (n_seeds, horizon) — one forecast per seed, for a single
+            (mechanism, proportion, imputer, forecaster) condition.
+        reference: shape (horizon,) — the curve bias is measured against
+            (true OT, or the complete-data baseline forecast).
+
+    Returns:
+        (bias_sq, variance), each of shape (horizon,).
+    """
+     
+     mean_forecast = forecasts.mean(axis=0)
+     bias_sq = (mean_forecast - reference) ** 2
+     variance = forecasts.var(axis=0)
+
+     return bias_sq, variance
+
+def decompose_bias_variance(
+        forecasts: np.ndarray,
+        reference: np.ndarray
+) -> tuple[np.ndarray, np.ndarray]:
+    
+    """Horizon-averaged bias² and variance — one (bias², variance) per condition (mech, prop, imp, forecast)."""
+
+    bias_sq, variance = pointwise_bias_variance(forecasts, reference)
+
+    return float(bias_sq.mean()), float(variance.mean())
