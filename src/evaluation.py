@@ -16,13 +16,6 @@ def _mae(array: np.ndarray) -> float:
     return np.mean(abs(array))
 
 
-def _bias():
-    pass
-
-def _variance():
-    pass
-
-
 # --- External functions ---
 
 def reconstruction_errors(
@@ -42,18 +35,3 @@ def reconstruction_errors(
     """
     errors = (imputed - true).to_numpy()[mask.to_numpy()]
     return _rmse(errors), _mae(errors)
-
-def measure_prediction(test: pd.DataFrame, pred_dfs: pd.DataFrame):
-    """
-    Evaluates performance of forecasting.
-
-    Args:
-        test: Complete, orgininal test data.
-        pred_dfs: List of forecasting predictions.
-    
-    Returns:
-        RMSE, MAPE, bias, variance
-    """    
-    
-    
-    pass
