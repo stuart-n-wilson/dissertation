@@ -22,8 +22,9 @@ def load_ett(path: str | Path = DEFAULT_ETT_PATH) -> pd.DataFrame:
             f"PROJECT_ROOT = {PROJECT_ROOT}"
         )
     
-    return pd.read_csv(path, parse_dates=["date"], index_col="date")
-
+    df = pd.read_csv(path, parse_dates=["date"], index_col="date")
+    
+    return df.asfreq("15min")
 
 def chronological_split(
     df: pd.DataFrame, test_size: float = 0.3
