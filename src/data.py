@@ -3,7 +3,7 @@ from sklearn.preprocessing import MinMaxScaler
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_ETT_PATH = PROJECT_ROOT / "data" / "raw" / "ETTm1.csv"
+DEFAULT_ETT_PATH = PROJECT_ROOT / "data" / "raw" / "ETTh1.csv"
 
 def load_ett(path: str | Path = DEFAULT_ETT_PATH) -> pd.DataFrame:
     """Load the ETTm1 dataset from CSV with a DatetimeIndex.
@@ -24,7 +24,7 @@ def load_ett(path: str | Path = DEFAULT_ETT_PATH) -> pd.DataFrame:
     
     df = pd.read_csv(path, parse_dates=["date"], index_col="date")
     
-    return df.asfreq("15min")
+    return df.asfreq("1h")
 
 def chronological_split(
     df: pd.DataFrame, test_size: float = 0.3

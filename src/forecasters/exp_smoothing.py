@@ -9,9 +9,9 @@ class ExpSmoothingForecaster(BaseForecaster):
 
     name = "exp_smoothing"
 
-    def __init__(self, seasonal_periods: int = 96, seasonal: str = "add",
+    def __init__(self, seasonal_periods: int = 24, seasonal: str = "add",
                  trend: str | None = "add", damped_trend: bool = True):
-        self.seasonal_periods = seasonal_periods   # 96 = one day at 15-min steps
+        self.seasonal_periods = seasonal_periods
         self.seasonal = seasonal
         self.trend = trend
         self.damped_trend = damped_trend
