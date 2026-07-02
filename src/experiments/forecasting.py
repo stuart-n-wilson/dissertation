@@ -18,6 +18,7 @@ class ForecastingExperiment:
         store: ReconstructedStore,
         truth: np.ndarray,
         baselines: dict[str, np.ndarray],
+        unscale_fn: function
     ) -> pd.DataFrame:
         """Forecast from every reconstructed dataset and decompose error per condition.
 
@@ -45,7 +46,7 @@ class ForecastingExperiment:
                 fitted = forecaster.fit(reconstructed)
 
                 # Key forecast by mechanism, proportion, imputer and forecaster.
-                predictions[(origin.mechanism, origin.proportion, origin.imputer, model)].append(fitted.predict(horizon))
+                predictions[(origin.mechanism, origin.proportion, origin.imputer, model)].append(unscale_fn(fitted.predict(horizon)))
 
         records = []
 
