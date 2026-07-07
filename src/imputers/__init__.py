@@ -1,4 +1,5 @@
 from .base import BaseImputer
+from .mean import MeanImputer
 from .locf import LOCFImputer
 from .ks import KSImputer
 from .arima import ARIMAImputer
@@ -6,6 +7,7 @@ from .lstm import LSTMImputer
 
 
 IMPUTERS: dict[str, type[BaseImputer]] = {
+    "mean": MeanImputer,
     "locf": LOCFImputer,
     "ks": KSImputer,
     "arima": ARIMAImputer,
