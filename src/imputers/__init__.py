@@ -3,7 +3,7 @@ from .mean import MeanImputer
 from .locf import LOCFImputer
 from .ks import KSImputer
 from .arima import ARIMAImputer
-from .lstm import LSTMImputer
+from .brits import BRITSImputer
 
 
 IMPUTERS: dict[str, type[BaseImputer]] = {
@@ -11,7 +11,7 @@ IMPUTERS: dict[str, type[BaseImputer]] = {
     "locf": LOCFImputer,
     "ks": KSImputer,
     "arima": ARIMAImputer,
-    "lstm": LSTMImputer,
+    "brits": BRITSImputer,
 }
 
 

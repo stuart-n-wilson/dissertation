@@ -1,6 +1,7 @@
 from dataclasses import asdict
 import pandas as pd
-
+from tqdm import tqdm
+from itertools import product
 from src.missingness import create_mask
 from src.imputers import get_imputer
 from src.evaluation import reconstruction_errors
@@ -21,31 +22,57 @@ class ImputationExperiment:
         self.seeds = seeds
         self.imputer_names = imputer_names
 
+    # def run(self, train: pd.DataFrame, store: ReconstructedStore) -> pd.DataFrame:
+
+    #     runs = []
+
+    #     for seed in self.seeds:
+
+    #         for mechanism in self.mechanisms:
+
+    #             for proportion in self.proportions:
+
+    #                 mask = create_mask(train, mechanism, proportion, seed)
+    #                 incomplete = train.mask(mask)
+
+    #                 for name in self.imputer_names:
+                        
+    #                     # Inititate new model each time - prevent leakage.
+    #                     imputer = get_imputer(name)
+    #                     imputed = imputer.fit_transform(incomplete)
+    #                     rmse, mae = reconstruction_errors(train, imputed, mask)
+    #                     origin = OriginKey(mechanism, proportion, seed, name)
+
+    #                     # Save reconstructed dataset under Origin key.
+    #                     store.put(origin, imputed)
+    #                     runs.append(ExperimentRun(
+    #                         mechanism, proportion, seed, name, rmse, mae
+    #                     ))
+
+    #     return pd.DataFrame([asdict(r) for r in runs])
+
     def run(self, train: pd.DataFrame, store: ReconstructedStore) -> pd.DataFrame:
 
         runs = []
 
-        for seed in self.seeds:
+        # Flatten the grid so tqdm knows the total and can show % + ETA.
+        combos = list(product(self.seeds, self.mechanisms, self.proportions, self.imputer_names))
 
-            for mechanism in self.mechanisms:
+        for seed, mechanism, proportion, name in tqdm(combos, desc="imputation"):
 
-                for proportion in self.proportions:
+            mask = create_mask(train, mechanism, proportion, seed)
+            incomplete = train.mask(mask)
 
-                    mask = create_mask(train, mechanism, proportion, seed)
-                    incomplete = train.mask(mask)
+            # Inititate new model each time - prevent leakage.
+            imputer = get_imputer(name)
+            imputed = imputer.fit_transform(incomplete)
+            rmse, mae = reconstruction_errors(train, imputed, mask)
+            origin = OriginKey(mechanism, proportion, seed, name)
 
-                    for name in self.imputer_names:
-                        
-                        # Inititate new model each time - prevent leakage.
-                        imputer = get_imputer(name)
-                        imputed = imputer.fit_transform(incomplete)
-                        rmse, mae = reconstruction_errors(train, imputed, mask)
-                        origin = OriginKey(mechanism, proportion, seed, name)
-
-                        # Save reconstructed dataset under Origin key.
-                        store.put(origin, imputed)
-                        runs.append(ExperimentRun(
-                            mechanism, proportion, seed, name, rmse, mae
-                        ))
+            # Save reconstructed dataset under Origin key.
+            store.put(origin, imputed)
+            runs.append(ExperimentRun(
+                mechanism, proportion, seed, name, rmse, mae
+            ))
 
         return pd.DataFrame([asdict(r) for r in runs])
