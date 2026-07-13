@@ -20,6 +20,28 @@ WHITE   = "#FFFFFF"
 BLUE_RAMP = ["#C8D9EF", "#8AADD8", "#4D80C0", PRIMARY, "#073870"]
 CAT_PAL   = [PRIMARY, "#3A78C9", MUTED, "#8FA8CC", "#2D4E7A", "#A0AABC"]
 
+# ── Model colours (single source of truth for result figures) ──
+#   Four classical/structural imputers form the blue ramp (worse -> better);
+#   BRITS takes the corr-cmap red as the standout neural method (like OT in the ACF plot).
+IMPUTER_COLORS = {
+    "mean":  "#A0AABC",   # lightest grey-blue -- naive baseline
+    "locf":  "#8AADD8",   # light blue
+    "ks":    "#3A78C9",   # mid blue
+    "arima": PRIMARY,     # #003366 navy -- darkest blue
+    "brits": "#C94040",   # corr-cmap red -- standout, distinct from all blues
+}
+
+FORECASTER_COLORS = {
+    "exp_smoothing": "#8AADD8",   # light blue -- univariate baseline
+    "xgboost":       PRIMARY,     # navy -- multivariate
+}
+
+# ── Canonical orderings / labels (keep every figure consistent) ──
+IMPUTER_ORDER    = ["mean", "locf", "ks", "arima", "brits"]
+FORECASTER_ORDER = ["exp_smoothing", "xgboost"]
+MECHANISM_ORDER  = ["mar", "mcar", "mnar"]
+MECHANISM_TITLES = {"mar": "MAR", "mcar": "MCAR", "mnar": "MNAR"}
+
 _EXTRACTOR = {
     "year":      lambda idx: idx.year,
     "month":     lambda idx: idx.month,
@@ -588,6 +610,133 @@ def plot_monthly_box(df, feature, title=None, subtitle=None):
     if subtitle:
         ax.text(0, 1.01, subtitle, transform=ax.transAxes,
                 color=MUTED, fontsize=8.5, va="bottom")
+
+    fig.tight_layout()
+    return fig
+
+def plot_reconstruction(
+    df,
+    x,                      # column for the x-axis (e.g. "proportion")
+    y,                      # column for the y-axis metric (e.g. "reconstruction_mae")
+    panel,                  # column faceted across subplots (e.g. "mechanism")
+    series,                 # column drawn as separate lines (e.g. "imputer")
+    agg="mean",             # aggregation for duplicate (panel, series, x) rows
+    panel_order=None,       # explicit order/subset of panels; None = sorted unique
+    series_order=None,      # explicit order/subset of series; None = sorted unique
+    color_map=None,         # dict {series_value: colour}; overrides palette, keyed by name
+    palette=None,           # fallback list of colours for series; None = CAT_PAL
+    x_label=None,
+    y_label=None,
+    x_ticks=None,           # explicit x tick positions, e.g. [10, 30, 50]
+    panel_titles=None,      # dict {panel_value: title}; None = str(value)
+    legend_title=None,
+    legend_loc="right",     # "right" (side margin) or "bottom" (row beneath)
+    layout="horizontal",    # "horizontal" or "vertical"
+    suptitle=None,
+    subtitle=None,
+    marker="o",
+    figsize=None,
+):
+    """
+    Faceted line plot: one subplot per `panel` value, one line per `series` value,
+    `y` against `x`. Styled to the dissertation theme.
+
+    Returns:
+        matplotlib.figure.Figure
+    """
+    agg_df = (df.groupby([series, panel, x])[y].agg(agg).reset_index())
+
+    panels  = panel_order  if panel_order  is not None else sorted(agg_df[panel].unique())
+    lines   = series_order if series_order is not None else sorted(agg_df[series].unique())
+    if color_map is not None:
+        colors = color_map
+    else:
+        palette = palette if palette is not None else CAT_PAL
+        colors  = {s: palette[i % len(palette)] for i, s in enumerate(lines)}
+
+    n = len(panels)
+
+    if layout == "vertical":
+        fig, axes = plt.subplots(
+            n, 1,
+            figsize=figsize or (5.8, n * 2.8),
+            sharex=True,
+            sharey=True,
+            squeeze=False,
+        )
+    else:
+        fig, axes = plt.subplots(
+            1, n,
+            figsize=figsize or (n * 5, 4.2),
+            sharey=True,
+            squeeze=False,
+        )
+
+    axes = axes.flatten()
+
+    for ax, pv in zip(axes, panels):
+        sub = agg_df[agg_df[panel] == pv]
+        for s in lines:
+            g = sub[sub[series] == s].sort_values(x)
+            ax.plot(g[x], g[y], marker=marker, markersize=4,
+                    color=colors[s], label=str(s))
+
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["left"].set_visible(False)
+        ax.spines["bottom"].set_color(PRIMARY)
+        ax.spines["bottom"].set_linewidth(1.0)
+        ax.grid(axis="y", color=LIGHT, linewidth=0.7)
+        ax.set_facecolor(WHITE)
+
+        if x_ticks is not None:
+            ax.set_xticks(x_ticks)
+
+        ax.tick_params(axis="x", labelsize=8.5, colors=MUTED)
+        ax.tick_params(axis="y", labelsize=8.5, colors=MUTED)
+        ax.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5, prune="both"))
+
+        if layout == "horizontal" or ax is axes[-1]:
+            ax.set_xlabel(x_label if x_label is not None else x,
+                          color=MUTED, fontsize=10)
+
+        title = (panel_titles or {}).get(pv, str(pv))
+        ax.set_title(title, color=INK, fontweight="bold", fontsize=11, loc="left", pad=14)
+
+    if layout == "vertical":
+        for ax in axes:
+            ax.set_ylabel(y_label if y_label is not None else y,
+                        color=MUTED, fontsize=10)
+    else:
+        axes[0].set_ylabel(y_label if y_label is not None else y,
+                        color=MUTED, fontsize=10)
+
+    # Legend outside the plotting area so it never overlaps the lines
+    handles, labels = axes[0].get_legend_handles_labels()
+
+    if layout == "vertical":
+        fig.legend(handles, labels, title=legend_title,
+                   title_fontsize=9, fontsize=8.5, frameon=False,
+                   labelcolor=INK,
+                   bbox_to_anchor=(1.005, 0.5), loc="center left")
+    elif legend_loc == "bottom":
+        fig.legend(handles, labels, title=legend_title,
+                   title_fontsize=9, fontsize=8.5, frameon=False,
+                   labelcolor=INK,
+                   bbox_to_anchor=(0.5, -0.02), loc="upper center",
+                   ncol=len(lines))
+    else:  # "right"
+        fig.legend(handles, labels, title=legend_title,
+                   title_fontsize=9, fontsize=8.5, frameon=False,
+                   labelcolor=INK,
+                   bbox_to_anchor=(1.005, 0.5), loc="center left")
+
+    if suptitle:
+        fig.suptitle(suptitle, x=0.0, ha="left", fontsize=13,
+                     fontweight="bold", color=INK, y=1.04)
+    if subtitle:
+        fig.text(0.0, 1.00, subtitle, ha="left", fontsize=9,
+                 color=MUTED, va="top")
 
     fig.tight_layout()
     return fig
