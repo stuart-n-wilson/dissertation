@@ -36,6 +36,12 @@ FORECASTER_COLORS = {
     "xgboost":       PRIMARY,     # navy -- multivariate
 }
 
+MECHANISM_COLORS = {
+    "mar":  PRIMARY,      # #003366 navy
+    "mcar": "#3A78C9",    # mid blue
+    "mnar": "#C94040",    # red — the standout (and it's the inversion finding)
+}
+
 # ── Canonical orderings / labels (keep every figure consistent) ──
 IMPUTER_ORDER    = ["mean", "locf", "ks", "arima", "brits"]
 FORECASTER_ORDER = ["exp_smoothing", "xgboost"]

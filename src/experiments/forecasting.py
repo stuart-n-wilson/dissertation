@@ -4,6 +4,7 @@ from src.experiments.artifacts import ReconstructedStore
 from src.forecasters import get_forecaster
 from src.evaluation import decompose_bias_variance
 from collections import defaultdict
+from tqdm.auto import tqdm
 
 
 class ForecastingExperiment:
@@ -35,7 +36,7 @@ class ForecastingExperiment:
 
         predictions = defaultdict(list)
 
-        for origin in store.keys():
+        for origin in tqdm(list(store.keys()), desc="forecasting"):
 
             reconstructed = store.get(origin)
 
