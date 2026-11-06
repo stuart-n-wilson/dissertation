@@ -59,15 +59,6 @@ findings to more datasets.
 - The best reconstruction method is not the best forecasting input. BRITS reconstructed best at 10% missingness but was the least stable of the competent forecasting inputs.
 - XGBoost carried more bias and variance than Holt-Winters, because it is multivariate and recursive and so is exposed to imputed lags across all features.
 
-## Repository structure
-
-```
-TODO: replace with your actual folders, e.g.
-src/        imputation, forecasting and evaluation code
-notebooks/  exploratory analysis
-figures/    plots used in the write-up
-```
-
 ## Full write-up
 
 [MSc_Disseration.pdf](https://github.com/stuart-n-wilson/dissertation/blob/main/MSc_Dissertation.pdf)
@@ -75,4 +66,4 @@ figures/    plots used in the write-up
 
 ## Author
 
-Stuart Wilson · [LinkedIn](https://linkedin.com/in/stuart-n-wilson) · [Portfolio](https://stuart-n-wilson.github.io/)
+Stuart Wilson · [LinkedIn](https://linkedin.com/in/stuart-n-wilson) · [Website](https://stuart-n-wilson.github.io/)
