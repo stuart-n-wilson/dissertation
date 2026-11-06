@@ -33,9 +33,8 @@ figures/    plots used in the write-up
 
 ## Full write-up
 
-```
 [MSc_Disseration.pdf](https://github.com/stuart-n-wilson/dissertation/blob/main/MSc_Dissertation.pdf)
-```
+
 
 ## Author
 
