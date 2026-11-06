@@ -31,17 +31,11 @@ notebooks/  exploratory analysis
 figures/    plots used in the write-up
 ```
 
-## Setup
-
-```bash
-git clone https://github.com/stuart-n-wilson/dissertation.git
-cd dissertation
-pip install -r requirements.txt   # TODO: confirm this file exists
-```
-
 ## Full write-up
 
-TODO: link to the dissertation PDF, or remove this section.
+```
+MSc_Disseration.pdf
+```
 
 ## Author
 
